@@ -217,7 +217,7 @@ class MMModemInterface(ServiceInterface):
         if not 'org.ofono.ConnectionManager' in self.ofono_interfaces:
             return
 
-        contexts = await self.ofono_interfaces['org.ofono.ConnectionManager'].call_get_contexts();
+        contexts = await self.ofono_interfaces['org.ofono.ConnectionManager'].call_get_contexts()
         old_bearer_list = self.props['Bearers'].value
         for ctx in contexts:
             if ctx[1]['Type'].value == "internet":
