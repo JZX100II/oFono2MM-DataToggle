@@ -2,6 +2,8 @@ from dbus_next.service import (ServiceInterface, method, dbus_property, signal)
 from dbus_next.constants import PropertyAccess
 from dbus_next import Variant
 
+import os
+
 class MMModemSimpleInterface(ServiceInterface):
     def __init__(self, mm_modem, ofono_interfaces, ofono_interface_props):
         super().__init__('org.freedesktop.ModemManager1.Modem.Simple')
@@ -110,7 +112,20 @@ class MMModemSimpleInterface(ServiceInterface):
         except Exception as e:
             bearer = f'/org/freedesktop/ModemManager/Bearer/0'
 
+        #print('saving toggle mode: Connecting...')
+        await self.saveToggleMode('True')
+
         return bearer
+    
+    async def saveToggleMode(self, mode):
+        toggleModeDir = os.path.join('/var/lib/ofono2mm')
+        toggleModePath = os.path.join(toggleModeDir, 'toggleMode')
+
+        if not os.path.exists(toggleModeDir):
+            os.makedirs(toggleModeDir)
+        
+        with open (toggleModePath, 'w') as toggleMode:
+            toggleMode.write(mode)
 
     @method()
     async def Disconnect(self, path: 'o'):
@@ -125,6 +140,9 @@ class MMModemSimpleInterface(ServiceInterface):
                 await self.mm_modem.bearers[path].doDisconnect()
             except Exception as e:
                 pass
+
+        #print('saving toggle mode: Disconnecting...')
+        await self.saveToggleMode('False')
 
     @method()
     async def GetStatus(self) -> 'a{sv}':
