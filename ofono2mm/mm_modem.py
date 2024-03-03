@@ -752,7 +752,7 @@ class MMModemInterface(ServiceInterface):
             self.emit_properties_changed({'State': self.props['State'].value})
 
             try:
-                await self.ofono_modem.call_set_property('Online', Variant('b', enable))
+                await self.ofono_modem.call_set_property('Online', Variant('b', True))
             except Exception as e:
                 pass
 
