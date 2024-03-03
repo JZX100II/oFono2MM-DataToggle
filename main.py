@@ -7,6 +7,7 @@ from dbus_next.constants import PropertyAccess
 from dbus_next import DBusError, BusType
 
 import asyncio
+import os
 
 from ofono2mm import MMModemInterface, Ofono, DBus
 from ofono2mm.utils import async_locked
@@ -123,6 +124,40 @@ class MMInterface(ServiceInterface):
         self.mm_modem_interfaces.append(mm_modem_interface)
         self.mm_modem_objects.append(f'/org/freedesktop/ModemManager1/Modem/{self.i}')
         self.i += 1
+
+        mm_modem_simple = await mm_modem_interface.get_mm_modem_simple_interface()
+        if mm_modem_simple:
+            print('toggling mobile data after reboot')
+            if await self.checkToggleMode():
+                if await self.checkToggleState():
+                    await mm_modem_simple.Connect(mprops)
+
+    async def checkToggleMode(self):
+        toggleModeDir = os.path.join('/var/lib/ofono2mm')
+        toggleModePath = os.path.join(toggleModeDir, 'toggleMode')
+
+        if not os.path.exists(toggleModeDir) or not os.path.exists(toggleModePath):
+            return False
+
+        with open (toggleModePath, 'r') as toggleMode:
+            state = toggleMode.readline().strip()
+
+        if state != 'False' or state != 'True':
+            return False
+
+        return True
+     
+    async def checkToggleState(self):
+        toggleModeDir = os.path.join('/var/lib/ofono2mm')
+        toggleModePath = os.path.join(toggleModeDir, 'toggleMode')
+
+        with open (toggleModePath, 'r') as toggleMode:
+            state = toggleMode.readline().strip()
+
+        if state == 'False':
+            return False
+
+        return True
 
     def ofono_modem_removed(self, path):
         for mm_object in self.mm_modem_objects:
