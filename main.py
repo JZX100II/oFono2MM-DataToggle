@@ -95,7 +95,7 @@ class MMInterface(ServiceInterface):
 
     def ofono_modem_added(self, path, mprops):
         try:
-            self.loop.create_task(self.export_new_modem(path, props))
+            self.loop.create_task(self.export_new_modem(path, mprops))
         except Exception as e:
             pass
 
