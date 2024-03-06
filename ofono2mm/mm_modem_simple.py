@@ -92,6 +92,9 @@ class MMModemSimpleInterface(ServiceInterface):
         else:
             self.props['access-technologies'] = Variant('u', 0) # network is unknown MM_MODEM_ACCESS_TECHNOLOGY_UNKNOWN
 
+    async def callConnect(self, properties: 'a{sv}') -> 'o':
+        self.Connect()
+        
     @method()
     async def Connect(self, properties: 'a{sv}') -> 'o':
         try:

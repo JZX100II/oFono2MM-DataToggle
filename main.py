@@ -135,7 +135,7 @@ class MMInterface(ServiceInterface):
                     properties = await self.loadProperties()
                     #print('loaded properties are: ', properties)
                     try:
-                        await mm_modem_simple.Connect(properties)
+                        await mm_modem_simple.callConnect(properties)
                     except Exception as e:
                         print('Exception occurred in mm_modem_simple.Connect(): ', e)
 
