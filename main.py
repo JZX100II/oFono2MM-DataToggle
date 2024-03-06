@@ -5,9 +5,11 @@ from dbus_next.service import (ServiceInterface,
                                method, dbus_property)
 from dbus_next.constants import PropertyAccess
 from dbus_next import DBusError, BusType
+from dbus_next import Variant
 
 import asyncio
 import os
+import json
 
 from ofono2mm import MMModemInterface, Ofono, DBus
 from ofono2mm.utils import async_locked
@@ -130,7 +132,25 @@ class MMInterface(ServiceInterface):
             print('toggling mobile data after reboot')
             if await self.checkToggleMode():
                 if await self.checkToggleState():
-                    await mm_modem_simple.Connect(mprops)
+                    properties = await self.loadProperties()
+                    #print('loaded properties are: ', properties)
+                    try:
+                        await mm_modem_simple.Connect(properties)
+                    except Exception as e:
+                        print('Exception occurred in mm_modem_simple.Connect(): ', e)
+
+    async def loadProperties(self):
+        propertiesDir = os.path.join('/var/lib/ofono2mm')
+        propertiesPath = os.path.join(propertiesDir, 'properties')
+
+        if not os.path.exists(propertiesPath):
+            return
+
+        with open(propertiesPath, 'r') as f:
+            extracted_properties = json.load(f)
+
+        properties = {k: Variant(type(v).__name__[0], v) for k, v in extracted_properties.items()}
+        return properties
 
     async def checkToggleMode(self):
         toggleModeDir = os.path.join('/var/lib/ofono2mm')

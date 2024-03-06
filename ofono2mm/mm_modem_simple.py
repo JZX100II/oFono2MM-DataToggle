@@ -3,6 +3,7 @@ from dbus_next.constants import PropertyAccess
 from dbus_next import Variant
 
 import os
+import json
 
 class MMModemSimpleInterface(ServiceInterface):
     def __init__(self, mm_modem, ofono_interfaces, ofono_interface_props):
@@ -104,6 +105,8 @@ class MMModemSimpleInterface(ServiceInterface):
                                                                 properties['password'].value if 'password' in properties else '')
                 self.mm_modem.bearers[b].props['Properties'] = Variant('a{sv}', properties)
                 await self.mm_modem.bearers[b].doConnect()
+                await self.saveProperties(properties) 
+                await self.saveToggleMode('True')
                 return b
 
         try:
@@ -113,10 +116,23 @@ class MMModemSimpleInterface(ServiceInterface):
             bearer = f'/org/freedesktop/ModemManager/Bearer/0'
 
         #print('saving toggle mode: Connecting...')
+        await self.saveProperties(properties) 
         await self.saveToggleMode('True')
 
         return bearer
     
+    async def saveProperties(self, properties):
+        propertiesDir = os.path.join('/var/lib/ofono2mm')
+        propertiesPath = os.path.join(propertiesDir, 'properties')
+
+        if not os.path.exists(propertiesDir):
+            os.makedirs(propertiesDir)
+
+        extracted_properties = {k: v.value for k, v in properties.items()}
+
+        with open(propertiesPath, 'w') as f:
+            json.dump(extracted_properties, f)
+
     async def saveToggleMode(self, mode):
         toggleModeDir = os.path.join('/var/lib/ofono2mm')
         toggleModePath = os.path.join(toggleModeDir, 'toggleMode')
