@@ -95,6 +95,9 @@ class MMModemSimpleInterface(ServiceInterface):
     async def callConnect(self, properties):
         self.Connect()
         
+    async def check_network_registration_strength(self):
+        return self.ofono_interface_props['org.ofono.NetworkRegistration']['Strength'].value > 0
+
     @method()
     async def Connect(self, properties: 'a{sv}') -> 'o':
         try:
@@ -102,6 +105,10 @@ class MMModemSimpleInterface(ServiceInterface):
         except Exception as e:
             pass
 
+        if self.check_network_registration_strength():
+            ofono_ctx_interface = self.ofono_client["ofono_context"][self.ofono_ctx]['org.ofono.ConnectionContext']
+            await ofono_ctx_interface.call_set_property("Active", Variant('b', True))
+        
         for b in self.mm_modem.bearers:
             if self.mm_modem.bearers[b].props['Properties'].value['apn'] == properties['apn']:
                 await self.mm_modem.bearers[b].add_auth_ofono(properties['username'].value if 'username' in properties else '',
