@@ -127,7 +127,7 @@ class MMInterface(ServiceInterface):
         self.mm_modem_objects.append(f'/org/freedesktop/ModemManager1/Modem/{self.i}')
         self.i += 1
 
-        mm_modem_simple = await mm_modem_interface.get_mm_modem_simple_interface()
+        mm_modem_simple = mm_modem_interface.get_mm_modem_simple_interface()
         if mm_modem_simple:
             print('toggling mobile data after reboot')
             if await self.checkToggleMode():
