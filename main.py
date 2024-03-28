@@ -13,6 +13,7 @@ import json
 
 from ofono2mm import MMModemInterface, Ofono, DBus
 from ofono2mm.utils import async_locked
+from ofono2mm.file_logging import logs_in_file
 
 has_bus = False
 
@@ -129,7 +130,7 @@ class MMInterface(ServiceInterface):
 
         mm_modem_simple = mm_modem_interface.get_mm_modem_simple_interface()
         if mm_modem_simple:
-            print('toggling mobile data after reboot')
+            await logs_in_file('toggling mobile data after reboot')
             if await self.checkToggleMode():
                 if await self.checkToggleState():
                     properties = await self.loadProperties()
