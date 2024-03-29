@@ -131,13 +131,40 @@ class MMInterface(ServiceInterface):
         if mm_modem_simple:
             print('toggling mobile data after reboot')
             if await self.checkToggleMode():
+                print('self.checkToggleMode: ')
                 if await self.checkToggleState():
-                    properties = await self.loadProperties()
+                    print('self.checkToggleState: ')
+                    #properties = await self.loadProperties()
                     #print('loaded properties are: ', properties)
                     try:
+                        properties = await self.loadProperties()
+                        print(f'loaded properties are: {properties}')
+                        print('trying to activate_network_registration, before creating task')
+                        activate_task = self.loop.create_task(self.activate_network_registration(mm_modem_simple))
+                        #await logs_in_file('callConnect(properties) of the main.py')
+                        await activate_task
                         await mm_modem_simple.callConnect(properties)
+                        print('callConnect(properties) of the main.py')
                     except Exception as e:
-                        print('Exception occurred in mm_modem_simple.Connect(): ', e)
+                        print('Exception occurred in mm_modem_simple.Connect(): ' + str(e))
+
+    async def activate_network_registration(self, mm_modem_simple):
+        #print('trying to activate_network_registration, before while True')
+        while True:
+            if await mm_modem_simple.check_network_registration_strength() == None:
+                #print('trying to activate_network_registration, looks like we just passed')
+                pass
+            elif await mm_modem_simple.check_network_registration_strength():
+                #print('trying to activate_network_registration, first if')
+                return
+            elif await mm_modem_simple.check_network_registration_strength() > 0:
+                #print('trying to activate_network_registration, second if')
+                ofono_ctx_interface = self.ofono_client["ofono_context"][self.ofono_ctx]['org.ofono.ConnectionContext']
+                await ofono_ctx_interface.call_set_property("Active", Variant('b', True))
+                return
+
+            #print('trying to activate_network_registration')
+            await asyncio.sleep(3)
 
     async def loadProperties(self):
         propertiesDir = os.path.join('/var/lib/ofono2mm')
