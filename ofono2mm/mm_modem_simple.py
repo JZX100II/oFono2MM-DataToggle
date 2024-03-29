@@ -96,7 +96,15 @@ class MMModemSimpleInterface(ServiceInterface):
         self.Connect()
         
     async def check_network_registration_strength(self):
-        return self.ofono_interface_props['org.ofono.NetworkRegistration']['Strength'].value > 0
+        try:
+            if 'org.ofono.NetworkRegistration' in self.ofono_interface_props:
+                await print('logging some props here: ', self.ofono_interface_props['org.ofono.NetworkRegistration'])
+                await print('Strength of NetworkRegistration: ', self.ofono_interface_props['org.ofono.NetworkRegistration']['Strength'].value)
+                return self.ofono_interface_props['org.ofono.NetworkRegistration']['Strength'].value
+            else:
+                return False
+        except Exception as e:
+            await print('the error raised in the check_network_registration_strength was: ', str(e))
 
     @method()
     async def Connect(self, properties: 'a{sv}') -> 'o':
@@ -104,10 +112,6 @@ class MMModemSimpleInterface(ServiceInterface):
             await self.props()
         except Exception as e:
             pass
-
-        if self.check_network_registration_strength():
-            ofono_ctx_interface = self.ofono_client["ofono_context"][self.ofono_ctx]['org.ofono.ConnectionContext']
-            await ofono_ctx_interface.call_set_property("Active", Variant('b', True))
         
         for b in self.mm_modem.bearers:
             if self.mm_modem.bearers[b].props['Properties'].value['apn'] == properties['apn']:
