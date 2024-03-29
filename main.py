@@ -162,7 +162,7 @@ class MMInterface(ServiceInterface):
         with open (toggleModePath, 'r') as toggleMode:
             state = toggleMode.readline().strip()
 
-        if state != 'False' or state != 'True':
+        if state != 'False' and state != 'True':
             return False
 
         return True
