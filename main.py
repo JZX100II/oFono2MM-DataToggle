@@ -151,13 +151,14 @@ class MMInterface(ServiceInterface):
     async def activate_network_registration(self, mm_modem_simple):
         #print('trying to activate_network_registration, before while True')
         while True:
-            if await mm_modem_simple.check_network_registration_strength() == None:
-                #print('trying to activate_network_registration, looks like we just passed')
-                pass
-            elif await mm_modem_simple.check_network_registration_strength():
-                #print('trying to activate_network_registration, first if')
+            strength = await mm_modem_simple.check_network_registration_strength()
+            if strength == None:
+                print('Probably SIM issues related')
                 return
-            elif await mm_modem_simple.check_network_registration_strength() > 0:
+            elif strength:
+                #print('trying to activate_network_registration, first if')
+                continue
+            elif strength > 0:
                 #print('trying to activate_network_registration, second if')
                 ofono_ctx_interface = self.ofono_client["ofono_context"][self.ofono_ctx]['org.ofono.ConnectionContext']
                 await ofono_ctx_interface.call_set_property("Active", Variant('b', True))
